@@ -2,9 +2,14 @@ import 'package:ao3notifications/app_theme.dart';
 import 'package:ao3notifications/models/ao3_model.dart';
 import 'package:ao3notifications/pages/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 
+// TODO: Update permissions in the android manifest and Info.plist so that URLLauncher can work.
 void main() {
+  Ao3Model.init();
+  Hive.openBox("username");
+  Hive.openBox("bookmarks");
   runApp(const Ao3App());
 }
 

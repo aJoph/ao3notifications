@@ -1,6 +1,8 @@
 # ao3notifications
 
-A new Flutter project.
+A Flutter project to provide an app capable of accessing a person's bookmarks and send notifications when said bookmarks update. There is no in-app reading functionality; the locala browser is opened instead.
+
+I created this simply because I prefer local notifications over email notifications.
 
 ## Getting Started
 
