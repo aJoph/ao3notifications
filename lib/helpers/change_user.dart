@@ -1,4 +1,6 @@
+import 'package:ao3notifications/models/ao3_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChangeUserDialog extends StatefulWidget {
   const ChangeUserDialog({Key? key}) : super(key: key);
@@ -53,8 +55,9 @@ class ChangeUserDialogState extends State<ChangeUserDialog> {
   }
 
   void _acceptDialog(BuildContext context) {
-    // TODO: Implement Accept dialog callback for the ChangeUserDialog.
-    if (_key.currentState!.validate()) {}
+    if (_key.currentState!.validate()) {
+      context.read<Ao3Model>().username = _usernameTextEditingController.text;
+    }
     Navigator.pop(context);
   }
 }
