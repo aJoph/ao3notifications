@@ -22,6 +22,7 @@ class Ao3Model extends ChangeNotifier {
   }
 
   var bookmarks = <Work>[];
+  var bookmarksWithUpdates = <Work>[];
 
   /// Initiates the database for the app. Is a requirement for proper functioning of the app.
   static void init() {
@@ -32,8 +33,23 @@ class Ao3Model extends ChangeNotifier {
 
   void updateLibrary() {
     Ao3Client.getBookmarksFromUsername(username).then(
-      (value) => bookmarks = value,
+      (value) {
+        for (var i = 0; i < bookmarks.length; i++) {
+          // Bookmarks is being used for comparison because it will logically be smaller; this is to avoid out of range errors.
+          if (bookmarks[i].numberOfChapters != value[i].numberOfChapters) {
+            bookmarksWithUpdates.add(value[i]);
+          }
+        }
+        bookmarks = value;
+      },
     );
+
     notifyListeners();
+  }
+
+  void consumeNotifications() {
+    // TODO: Implement notifications.
+
+    bookmarksWithUpdates.clear();
   }
 }
