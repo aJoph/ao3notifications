@@ -15,13 +15,13 @@ class Ao3App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ao3 Notifications',
-      home: ChangeNotifierProvider(
-        create: (context) => Ao3Model(),
-        child: const HomePage(),
+    return ChangeNotifierProvider(
+      create: (context) => Ao3Model(),
+      child: MaterialApp(
+        title: 'Ao3 Notifications',
+        home: const HomePage(),
+        theme: AppTheme.light,
       ),
-      theme: AppTheme.light,
     );
   }
 }

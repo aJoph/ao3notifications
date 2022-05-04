@@ -1,6 +1,7 @@
 import 'package:ao3notifications/ao3_model.dart';
 import 'package:ao3notifications/helpers/bookmark_view.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);

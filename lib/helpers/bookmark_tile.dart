@@ -7,12 +7,10 @@ class BookmarkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: const Text("djasoidj"),
+    return ListTile(
+      title: Text("${work.title} by ${work.author}"),
+      subtitle: Text(work.description),
+      onTap: () {}, // TODO: Implement onTap for ListTiles
     );
-    // return ListTile(
-    //   title: Text("${work.title} by ${work.author}"),
-    //   subtitle: Text(work.description),
-    // );
   }
 }
