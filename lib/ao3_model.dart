@@ -4,17 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class Ao3Model extends ChangeNotifier {
-  final _usernameBox = Hive.openBox("username");
-  final _bookmarksBox = Hive.openBox("_bookmarks");
-
-  String _username = "jdij";
+  String? _username;
   String get username {
-    return _username;
+    if (_username == null && Hive.isBoxOpen("username")) {
+      bookmarks.isEmpty ? updateLibrary(_username ?? "") : "";
+      _username = Hive.box("username").values.first;
+    }
+    return _username ?? "";
   }
 
   set username(value) {
     _username = value;
-    updateLibrary(_username);
+    if (Hive.isBoxOpen("username")) {
+      Hive.box("username").put("username", _username);
+    }
+    updateLibrary(_username!);
     notifyListeners();
   }
 
