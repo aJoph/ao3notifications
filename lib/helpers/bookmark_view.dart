@@ -1,6 +1,5 @@
-import 'package:ao3_scraper/ao3_scraper.dart';
-import 'package:ao3notifications/helpers/bookmark_icon.dart';
-import 'package:ao3notifications/models/ao3_model.dart';
+import 'package:ao3notifications/ao3_model.dart';
+import 'package:ao3notifications/helpers/bookmark_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,19 +8,11 @@ class BookmarkView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var _bookmarks = context.watch<Ao3Model>().bookmarks;
-
+    var _works = context.watch<Ao3Model>().bookmarks;
     return ListView.builder(
-      itemCount: _bookmarks.length,
+      itemCount: _works.length,
       itemBuilder: (context, index) {
-        return BookmarkIcon(
-          title: _bookmarks[index].title,
-          author: _bookmarks[index].author,
-          description: _bookmarks[index].description,
-          link: Ao3Client.getURLfromWorkID(
-            _bookmarks[index].workID,
-          ),
-        );
+        return BookmarkTile(work: _works[index]);
       },
     );
   }
