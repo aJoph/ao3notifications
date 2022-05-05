@@ -2,7 +2,6 @@ import 'package:ao3notifications/ao3_model.dart';
 import 'package:ao3notifications/apptheme.dart';
 import 'package:ao3notifications/pages/homepage.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 void main() async {

@@ -7,8 +7,9 @@ class Ao3Model extends ChangeNotifier {
   String? _username;
   String get username {
     if (_username == null || _username!.isEmpty) {
-      if (Hive.isBoxOpen("username") && Hive.box("username").isNotEmpty) {
-        _username = Hive.box("username").values.first;
+      if (Hive.isBoxOpen("username") &&
+          Hive.box<String>("username").isNotEmpty) {
+        _username = Hive.box<String>("username").values.first;
         updateLibrary();
       }
     }
@@ -18,7 +19,7 @@ class Ao3Model extends ChangeNotifier {
   set username(value) {
     _username = value;
     if (Hive.isBoxOpen("username")) {
-      Hive.box("username").put("username", _username);
+      Hive.box<String>("username").put("username", _username ?? "");
     }
     updateLibrary().whenComplete(() => notifyListeners());
   }
@@ -28,17 +29,20 @@ class Ao3Model extends ChangeNotifier {
   var chapterTracker = <int, int>{};
 
   Future<void> updateLibrary() async {
-    // Read bookmarks in local storage.
+    // Read bookmarks in local storage on first app startup.
     if (!hasReadBookmarksInStorage &&
         Hive.isBoxOpen("bookmarks") &&
-        Hive.box("bookmarks").isNotEmpty) {
-      final _bookmarksBox = Hive.box("bookmarks");
+        Hive.box<int>("bookmarks").isNotEmpty) {
+      final _bookmarksBox = Hive.box<int>("bookmarks");
+      debugPrint("Entries in _bookmarksBox: " +
+          _bookmarksBox.values.length.toString());
 
-      // Getting the values in storage into the chapterTracker map.
+      // Getting the values in storage into the chapterTracker map,
+      // so checking if there has been an update is easier.
       for (var i = 0; i < _bookmarksBox.length; i++) {
-        final _workID = _bookmarksBox.values.elementAt(i);
+        final _workID = _bookmarksBox.keys.elementAt(i);
         final _chapterCount = _bookmarksBox.get(_workID);
-        chapterTracker[_workID] = _chapterCount;
+        chapterTracker[_workID] = _chapterCount ?? 1;
       }
 
       hasReadBookmarksInStorage = true;
@@ -48,6 +52,7 @@ class Ao3Model extends ChangeNotifier {
 
     // Seeing what has been updated.
     var _newlyUpdated = <int>[];
+
     for (final bookmark in bookmarks) {
       // If there has been no update.
       if (chapterTracker.containsKey(bookmark.workID) &&
@@ -55,7 +60,7 @@ class Ao3Model extends ChangeNotifier {
         continue;
       }
 
-      // If there has been an update. Update the chapterTracker and add the WorkID
+      // If there has been an update: Update the chapterTracker and add the WorkID
       // of the updated bookmark into _newlyUpdated to be consumed.
       chapterTracker[bookmark.workID] = bookmark.numberOfChapters;
       _newlyUpdated.add(bookmark.workID);
@@ -65,9 +70,9 @@ class Ao3Model extends ChangeNotifier {
 
     // Updating entries in database.
     if (Hive.isBoxOpen("bookmarks")) {
+      await Hive.box<int>("bookmarks").clear();
       for (final _work in bookmarks) {
-        await Hive.box("bookmarks").clear();
-        Hive.box("bookmarks").put(_work.workID, _work.numberOfChapters);
+        Hive.box<int>("bookmarks").put(_work.workID, _work.numberOfChapters);
       }
     }
 
@@ -76,12 +81,14 @@ class Ao3Model extends ChangeNotifier {
 
   void consumeNotifications(List<int> notifications) {
     // TODO: Implement consumeNotifications.
+    debugPrint(
+        "Notifications in consumeNotifications() " + notifications.toString());
   }
 
   static Future<void> init() async {
     await Hive.initFlutter();
-    await Hive.openBox("username");
-    await Hive.openBox("bookmarks");
+    await Hive.openBox<String>("username");
+    await Hive.openBox<int>("bookmarks");
   }
 
   static void showChangeUsernameDialog(BuildContext context) {
