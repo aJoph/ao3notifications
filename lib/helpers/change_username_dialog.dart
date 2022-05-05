@@ -26,6 +26,7 @@ class _UsernameDialogState extends State<UsernameDialog> {
             }
             return null;
           },
+          maxLength: 25,
           decoration: const InputDecoration(
             label: Text("Username"),
             icon: Icon(Icons.near_me),
@@ -47,14 +48,8 @@ class _UsernameDialogState extends State<UsernameDialog> {
 
   void _acceptDialog(BuildContext context) {
     if (_formKey.currentState!.validate()) {
-      // context.read<Ao3Model>().username = _usernameTextEditingController.text;
       context.read<Ao3Model>().username = _usernameTextEditingController.text;
-      Future.delayed(const Duration(milliseconds: 300)).then((value) {
-        // For some reason, popping the context without a delay of more than ~100 milliseconds
-        // Results in Ao3Model being used after being disposed...
-        // I gave up on finding the proper solution and am doing this horribleness instead.
-        Navigator.pop(context);
-      });
+      Navigator.pop(context);
     }
   }
 

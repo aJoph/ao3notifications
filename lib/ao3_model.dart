@@ -6,11 +6,23 @@ import 'package:hive_flutter/hive_flutter.dart';
 class Ao3Model extends ChangeNotifier {
   String? _username;
   String get username {
-    if (_username == null && Hive.isBoxOpen("username")) {
-      bookmarks.isEmpty ? updateLibrary(_username ?? "") : "";
-      _username = Hive.box("username").values.first;
+    if (_username == null || _username!.isEmpty) {
+      if (Hive.isBoxOpen("username") && Hive.box("username").isNotEmpty) {
+        _username = Hive.box("username").values.first;
+        debugPrint("here i am");
+        updateLibrary();
+      }
     }
     return _username ?? "";
+    // if ((_username == null || _username!.isEmpty) &&
+    //     Hive.isBoxOpen("username")) {
+    //   _username = Hive.box("username").get("username");
+    //   Future.delayed(const Duration(seconds: 1)).whenComplete(() {
+    //     // The delay is necessary to avoid recursively calling updateLibrary().
+    //     if (bookmarks.isEmpty) updateLibrary();
+    //   });
+    // }
+    // return _username ?? "";
   }
 
   set username(value) {
@@ -18,24 +30,14 @@ class Ao3Model extends ChangeNotifier {
     if (Hive.isBoxOpen("username")) {
       Hive.box("username").put("username", _username);
     }
-    updateLibrary(_username!);
-    notifyListeners();
+    updateLibrary().whenComplete(() => notifyListeners());
   }
 
   var bookmarks = <Work>[];
 
-  void updateLibrary(String username) {
-    Ao3Client.getBookmarksFromUsername(username)
-        .then((value) => bookmarks = value)
-        .whenComplete(
-          () => notifyListeners(),
-        );
-  }
-
-  static void init() {
-    Hive.initFlutter();
-    Hive.openBox("username");
-    Hive.openBox("_bookmarks");
+  Future<void> updateLibrary() async {
+    bookmarks = await Ao3Client.getBookmarksFromUsername(username);
+    notifyListeners();
   }
 
   static void showChangeUsernameDialog(BuildContext context) {

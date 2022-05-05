@@ -13,7 +13,7 @@ class BookmarkTile extends StatelessWidget {
       subtitle: Text(work.description),
       onTap: () => _launchUrl(
         Ao3Client.getURLfromWorkID(work.workID),
-      ), // TODO: Implement onTap for ListTiles
+      ),
     );
   }
 
