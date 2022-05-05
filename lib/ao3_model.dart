@@ -5,6 +5,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class Ao3Model extends ChangeNotifier {
   String? _username;
+
+  /// Username used to fetch the bookmarks.
+  /// If its value changes, updateLibrary is automatically called.
   String get username {
     if (_username == null || _username!.isEmpty) {
       if (Hive.isBoxOpen("username") &&
@@ -28,6 +31,12 @@ class Ao3Model extends ChangeNotifier {
   var bookmarks = <Work>[];
   var chapterTracker = <int, int>{};
 
+  /// Updates the bookmarks list in the Ao3Model, as well as the
+  /// chapterTracker map. If an update is found, it will immediately be
+  /// consumed.
+  ///
+  /// It will automatically fetch the local database for bookmarks and updated the
+  /// chapterTracker map with it for the sake of comparing it for new updates.
   Future<void> updateLibrary() async {
     // Read bookmarks in local storage on first app startup.
     if (!hasReadBookmarksInStorage &&
@@ -70,7 +79,13 @@ class Ao3Model extends ChangeNotifier {
 
     // Updating entries in database.
     if (Hive.isBoxOpen("bookmarks")) {
+      // Important: For some reason, this block of code is
+      // executing twice during startup of the app.
+      // So likely, updateLibrary is getting called twice.
+
+      // So that if a user has deleted a bookmark, it is reflected here.
       await Hive.box<int>("bookmarks").clear();
+
       for (final _work in bookmarks) {
         Hive.box<int>("bookmarks").put(_work.workID, _work.numberOfChapters);
       }
@@ -79,6 +94,8 @@ class Ao3Model extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// consumeNotifications shows local notifications for the user that at least
+  /// one of their bookmarks has received an updated.
   void consumeNotifications(List<int> notifications) {
     // TODO: Implement consumeNotifications.
     debugPrint(
