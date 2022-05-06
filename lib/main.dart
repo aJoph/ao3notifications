@@ -19,7 +19,10 @@ class Ao3App extends StatelessWidget {
       create: (context) => Ao3Model(),
       child: MaterialApp(
         title: 'Ao3 Notifications',
+        // The consumer is needed in order to use the Provider in the same place it is declared.
         home: Consumer<Ao3Model>(
+          // FutureBuilder is required to ensure that the database and local notifications
+          // plugins have been properly initialized, and return an error if not.
           builder: (context, model, child) => FutureBuilder(
               future: model.init(),
               builder: (ctx, snapshot) {

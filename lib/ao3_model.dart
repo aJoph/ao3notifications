@@ -5,10 +5,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class Ao3Model extends ChangeNotifier {
-  var fullyInitialized = false;
+  /// Initialized in Ao3Model.init()
+  FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
+
   String? _username;
-  FlutterLocalNotificationsPlugin?
-      flutterLocalNotificationsPlugin; // Init'ed in the init() function.
 
   /// Username used to fetch the bookmarks.
   /// If its value changes, updateLibrary is automatically called.
@@ -31,9 +31,16 @@ class Ao3Model extends ChangeNotifier {
     updateLibrary().whenComplete(() => notifyListeners());
   }
 
+  /// Used by the updateLibrary() function to check if the database has already been read.
+  /// Should always be true after the first call to updateLibrary().
   bool hasReadBookmarksInStorage = false;
 
+  /// The Ao3 bookmarks in memory. Is populated by the updateLIbrary() function.
   var bookmarks = <Work>[];
+
+  /// A map between workID and the chapterCount of the corresponding work.
+  ///
+  /// The updateLibrary() function will use this map to check if there has been an update.
   var chapterTracker = <int, int>{};
 
   /// Updates the bookmarks list in the Ao3Model, as well as the
@@ -148,8 +155,6 @@ class Ao3Model extends ChangeNotifier {
       throw (StateError(
           "Flutter local notifications plugin failed to initialize."));
     }
-
-    fullyInitialized = true;
 
     updateLibrary();
 
