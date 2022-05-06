@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class Ao3Model extends ChangeNotifier {
+  var fullyInitialized = false;
   String? _username;
   FlutterLocalNotificationsPlugin?
       flutterLocalNotificationsPlugin; // Init'ed in the init() function.
@@ -147,6 +148,12 @@ class Ao3Model extends ChangeNotifier {
       throw (StateError(
           "Flutter local notifications plugin failed to initialize."));
     }
+
+    fullyInitialized = true;
+
+    updateLibrary();
+
+    notifyListeners();
   }
 
   static void showChangeUsernameDialog(BuildContext context) {
