@@ -1,10 +1,13 @@
 import 'package:ao3_scraper/ao3_scraper.dart';
 import 'package:ao3notifications/helpers/change_username_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class Ao3Model extends ChangeNotifier {
   String? _username;
+  FlutterLocalNotificationsPlugin?
+      flutterLocalNotificationsPlugin; // Init'ed in the init() function.
 
   /// Username used to fetch the bookmarks.
   /// If its value changes, updateLibrary is automatically called.
@@ -28,6 +31,7 @@ class Ao3Model extends ChangeNotifier {
   }
 
   bool hasReadBookmarksInStorage = false;
+
   var bookmarks = <Work>[];
   var chapterTracker = <int, int>{};
 
@@ -96,16 +100,53 @@ class Ao3Model extends ChangeNotifier {
 
   /// consumeNotifications shows local notifications for the user that at least
   /// one of their bookmarks has received an updated.
-  void consumeNotifications(List<int> notifications) {
-    // TODO: Implement consumeNotifications.
+  void consumeNotifications(List<int> notifications) async {
     debugPrint(
         "Notifications in consumeNotifications() " + notifications.toString());
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails('your channel id', 'your channel name',
+            channelDescription: 'your channel description',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+            ticker: 'ticker');
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin!.show(0, 'Updates found.',
+        '${notifications.length} found in bookmarks.', platformChannelSpecifics,
+        payload: 'bookmarks');
   }
 
-  static Future<void> init() async {
+  /// Initializes the app's database as well as sets up
+  /// local notifications.
+  Future<void> init() async {
+    // Init database
     await Hive.initFlutter();
     await Hive.openBox<String>("username");
     await Hive.openBox<int>("bookmarks");
+
+    // Init local notifications plugin.
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('app_icon');
+    const initializationSettingsIOS = IOSInitializationSettings(
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
+    );
+    const initializationSettingsMacOS = MacOSInitializationSettings(
+        requestBadgePermission: false, requestSoundPermission: false);
+    const initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+        macOS: initializationSettingsMacOS);
+    final err = await flutterLocalNotificationsPlugin!.initialize(
+      initializationSettings,
+      onSelectNotification: (payload) {},
+    );
+    if (err != true) {
+      throw (StateError(
+          "Flutter local notifications plugin failed to initialize."));
+    }
   }
 
   static void showChangeUsernameDialog(BuildContext context) {
