@@ -28,6 +28,12 @@ class Ao3Model extends ChangeNotifier {
     if (Hive.isBoxOpen("username")) {
       Hive.box<String>("username").put("username", _username ?? "");
     }
+
+    // Clearing the bookmarks in memory, otherwise a notification will be sent
+    // simply for changing to another username.
+    bookmarks.clear();
+    chapterTracker.clear();
+
     updateLibrary().whenComplete(() => notifyListeners());
   }
 
@@ -55,8 +61,6 @@ class Ao3Model extends ChangeNotifier {
         Hive.isBoxOpen("bookmarks") &&
         Hive.box<int>("bookmarks").isNotEmpty) {
       final _bookmarksBox = Hive.box<int>("bookmarks");
-      debugPrint("Entries in _bookmarksBox: " +
-          _bookmarksBox.values.length.toString());
 
       // Getting the values in storage into the chapterTracker map,
       // so checking if there has been an update is easier.
@@ -109,8 +113,6 @@ class Ao3Model extends ChangeNotifier {
   /// consumeNotifications shows local notifications for the user that at least
   /// one of their bookmarks has received an updated.
   void consumeNotifications(List<int> notifications) async {
-    debugPrint(
-        "Notifications in consumeNotifications() " + notifications.toString());
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails('your channel id', 'your channel name',
             channelDescription: 'your channel description',
@@ -126,7 +128,7 @@ class Ao3Model extends ChangeNotifier {
 
   /// Initializes the app's database as well as sets up
   /// local notifications.
-  Future<void> init() async {
+  Future<bool> init() async {
     // Init database
     await Hive.initFlutter();
     await Hive.openBox<String>("username");
@@ -143,10 +145,14 @@ class Ao3Model extends ChangeNotifier {
     );
     const initializationSettingsMacOS = MacOSInitializationSettings(
         requestBadgePermission: false, requestSoundPermission: false);
+    const initializationSettingsLinux =
+        LinuxInitializationSettings(defaultActionName: "Ao3");
     const initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsIOS,
-        macOS: initializationSettingsMacOS);
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+      macOS: initializationSettingsMacOS,
+      linux: initializationSettingsLinux,
+    );
     final err = await flutterLocalNotificationsPlugin!.initialize(
       initializationSettings,
       onSelectNotification: (payload) {},
@@ -159,6 +165,7 @@ class Ao3Model extends ChangeNotifier {
     updateLibrary();
 
     notifyListeners();
+    return true;
   }
 
   static void showChangeUsernameDialog(BuildContext context) {
