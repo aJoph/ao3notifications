@@ -5,6 +5,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class Ao3Model extends ChangeNotifier {
+  Ao3Model() {
+    initFuture = init();
+  }
+
   /// Initialized in Ao3Model.init()
   FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
 
@@ -126,10 +130,15 @@ class Ao3Model extends ChangeNotifier {
         payload: 'bookmarks');
   }
 
+  /// initFuture is a variable meant to store the value of init().
+  /// Then, in FutureBuilder, the future property is set to watch initFuture, which is final.
+  /// This minimizes the rebuilds the app undergoes.
+  late final Future<bool> initFuture;
+
   /// Initializes the app's database as well as sets up
   /// local notifications.
   Future<bool> init() async {
-    // Init database
+    // Init
     await Hive.initFlutter();
     await Hive.openBox<String>("username");
     await Hive.openBox<int>("bookmarks");

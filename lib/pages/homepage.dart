@@ -20,10 +20,10 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: FutureBuilder(
-        future: context.read<Ao3Model>().init(),
+        future: context.watch<Ao3Model>().initFuture,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {

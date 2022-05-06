@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// TODO: Implement notifications page and notificationtile.
+// TODO: Implement notifications page and notifications tile.
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({Key? key}) : super(key: key);
 
