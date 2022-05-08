@@ -1,6 +1,6 @@
 import 'package:ao3_scraper/ao3_scraper.dart';
+import 'package:ao3notifications/ao3_model.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class BookmarkTile extends StatelessWidget {
   final Work work;
@@ -11,13 +11,9 @@ class BookmarkTile extends StatelessWidget {
     return ListTile(
       title: Text("${work.title} by ${work.author}"),
       subtitle: Text(work.description),
-      onTap: () => _launchUrl(
+      onTap: () => Ao3Model.ao3launchUrl(
         Ao3Client.getURLfromWorkID(work.workID),
       ),
     );
-  }
-
-  void _launchUrl(String _url) async {
-    if (!await launchUrl(Uri.parse(_url))) throw 'Could not launch $_url';
   }
 }

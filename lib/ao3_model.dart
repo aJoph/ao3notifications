@@ -3,10 +3,18 @@ import 'package:ao3notifications/helpers/change_username_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Ao3Model extends ChangeNotifier {
   Ao3Model() {
+    // initFuture = jad();
     initFuture = init();
+  }
+
+  Future<bool> jad() async {
+    await Future.delayed(const Duration(seconds: 4));
+    debugPrint("hey");
+    return true;
   }
 
   /// Initialized in Ao3Model.init()
@@ -21,7 +29,6 @@ class Ao3Model extends ChangeNotifier {
       if (Hive.isBoxOpen("username") &&
           Hive.box<String>("username").isNotEmpty) {
         _username = Hive.box<String>("username").values.first;
-        updateLibrary();
       }
     }
     return _username ?? "";
@@ -47,11 +54,40 @@ class Ao3Model extends ChangeNotifier {
 
   /// The Ao3 bookmarks in memory. Is populated by the updateLIbrary() function.
   var bookmarks = <Work>[];
+  var notifications = <Work>[];
 
   /// A map between workID and the chapterCount of the corresponding work.
   ///
   /// The updateLibrary() function will use this map to check if there has been an update.
   var chapterTracker = <int, int>{};
+
+  List<int> updateChapterTracker() {
+    var updates = <int>[];
+    for (final bookmark in bookmarks) {
+      // If there has been no update.
+      if (chapterTracker.containsKey(bookmark.workID) &&
+          chapterTracker[bookmark.workID] == bookmark.numberOfChapters) {
+        continue;
+      }
+
+      // If there has been an update: Update the chapterTracker and add the WorkID
+      // of the updated bookmark into _newlyUpdated to be consumed.
+      chapterTracker[bookmark.workID] = bookmark.numberOfChapters;
+      updates.add(bookmark.workID);
+    }
+    return updates;
+  }
+
+  Future<void> updateBookmarksDatabase(bookmarks) async {
+    if (Hive.isBoxOpen("bookmarks")) {
+      // So that if a user has deleted a bookmark, it is reflected here.
+      await Hive.box<int>("bookmarks").clear();
+
+      for (final _work in bookmarks) {
+        Hive.box<int>("bookmarks").put(_work.workID, _work.numberOfChapters);
+      }
+    }
+  }
 
   /// Updates the bookmarks list in the Ao3Model, as well as the
   /// chapterTracker map. If an update is found, it will immediately be
@@ -61,7 +97,7 @@ class Ao3Model extends ChangeNotifier {
   /// chapterTracker map with it for the sake of comparing it for new updates.
   Future<void> updateLibrary() async {
     // Read bookmarks in local storage on first app startup.
-    if (!hasReadBookmarksInStorage &&
+    if (hasReadBookmarksInStorage == false &&
         Hive.isBoxOpen("bookmarks") &&
         Hive.box<int>("bookmarks").isNotEmpty) {
       final _bookmarksBox = Hive.box<int>("bookmarks");
@@ -80,36 +116,10 @@ class Ao3Model extends ChangeNotifier {
     bookmarks = await Ao3Client.getBookmarksFromUsername(username);
 
     // Seeing what has been updated.
-    var _newlyUpdated = <int>[];
-
-    for (final bookmark in bookmarks) {
-      // If there has been no update.
-      if (chapterTracker.containsKey(bookmark.workID) &&
-          chapterTracker[bookmark.workID] == bookmark.numberOfChapters) {
-        continue;
-      }
-
-      // If there has been an update: Update the chapterTracker and add the WorkID
-      // of the updated bookmark into _newlyUpdated to be consumed.
-      chapterTracker[bookmark.workID] = bookmark.numberOfChapters;
-      _newlyUpdated.add(bookmark.workID);
-    }
-
+    var _newlyUpdated = updateChapterTracker();
     if (_newlyUpdated.isNotEmpty) consumeNotifications(_newlyUpdated);
 
-    // Updating entries in database.
-    if (Hive.isBoxOpen("bookmarks")) {
-      // Important: For some reason, this block of code is
-      // executing twice during startup of the app.
-      // So likely, updateLibrary is getting called twice.
-
-      // So that if a user has deleted a bookmark, it is reflected here.
-      await Hive.box<int>("bookmarks").clear();
-
-      for (final _work in bookmarks) {
-        Hive.box<int>("bookmarks").put(_work.workID, _work.numberOfChapters);
-      }
-    }
+    updateBookmarksDatabase(bookmarks);
 
     notifyListeners();
   }
@@ -118,8 +128,8 @@ class Ao3Model extends ChangeNotifier {
   /// one of their bookmarks has received an updated.
   void consumeNotifications(List<int> notifications) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails('your channel id', 'your channel name',
-            channelDescription: 'your channel description',
+        AndroidNotificationDetails('0', 'bookmarks',
+            channelDescription: 'Android channel for bookamrks.',
             importance: Importance.defaultImportance,
             priority: Priority.defaultPriority,
             ticker: 'ticker');
@@ -173,7 +183,6 @@ class Ao3Model extends ChangeNotifier {
 
     updateLibrary();
 
-    notifyListeners();
     return true;
   }
 
@@ -184,5 +193,9 @@ class Ao3Model extends ChangeNotifier {
         return const UsernameDialog();
       },
     );
+  }
+
+  static void ao3launchUrl(String _url) async {
+    if (!await launchUrl(Uri.parse(_url))) throw 'Could not launch $_url';
   }
 }

@@ -1,5 +1,6 @@
 import 'package:ao3notifications/ao3_model.dart';
 import 'package:ao3notifications/helpers/bookmark_view.dart';
+import 'package:ao3notifications/pages/updates_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,8 +34,14 @@ class HomePage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.read<Ao3Model>().updateLibrary(),
-        child: const Icon(Icons.refresh),
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationsPage(),
+              ));
+        },
+        child: const Icon(Icons.notifications),
       ),
     );
   }

@@ -10,11 +10,14 @@ class BookmarkView extends StatelessWidget {
   Widget build(BuildContext context) {
     var _bookmarks = context.watch<Ao3Model>().bookmarks;
 
-    return ListView.builder(
-      itemCount: _bookmarks.length,
-      itemBuilder: (context, index) {
-        return BookmarkTile(work: _bookmarks[index]);
-      },
+    return RefreshIndicator(
+      onRefresh: () => context.read<Ao3Model>().updateLibrary(),
+      child: ListView.builder(
+        itemCount: _bookmarks.length,
+        itemBuilder: (context, index) {
+          return BookmarkTile(work: _bookmarks[index]);
+        },
+      ),
     );
   }
 }
