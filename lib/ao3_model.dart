@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:ao3_scraper/ao3_scraper.dart';
 import 'package:ao3notifications/helpers/change_username_dialog.dart';
+import 'package:ao3notifications/helpers/updated_bookmark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,11 +14,10 @@ class Ao3Model extends ChangeNotifier {
     initFuture = init();
   }
 
-  Future<bool> jad() async {
-    await Future.delayed(const Duration(seconds: 4));
-    debugPrint("hey");
-    return true;
-  }
+  /// initFuture is a variable meant to store the value of init().
+  /// Then, in FutureBuilder, the future property is set to watch initFuture, which is final.
+  /// This minimizes the rebuilds the app undergoes.
+  late final Future<bool> initFuture;
 
   /// Initialized in Ao3Model.init()
   FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
@@ -54,27 +56,91 @@ class Ao3Model extends ChangeNotifier {
 
   /// The Ao3 bookmarks in memory. Is populated by the updateLIbrary() function.
   var bookmarks = <Work>[];
-  var notifications = <Work>[];
+  var notifications = <UpdatedBookmark>[];
 
   /// A map between workID and the chapterCount of the corresponding work.
   ///
   /// The updateLibrary() function will use this map to check if there has been an update.
   var chapterTracker = <int, int>{};
 
+  /// Initializes the app's database as well as sets up
+  /// local notifications.
+  Future<bool> init() async {
+    // Init
+    await Hive.initFlutter();
+    await Hive.openBox<String>("username");
+    await Hive.openBox<int>("bookmarks");
+    await Hive.openBox<String>("notifications");
+
+    // Init local notifications plugin.
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('mipmap/ic_launcher');
+    const initializationSettingsIOS = IOSInitializationSettings(
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
+    );
+    const initializationSettingsMacOS = MacOSInitializationSettings(
+        requestBadgePermission: false, requestSoundPermission: false);
+    const initializationSettingsLinux =
+        LinuxInitializationSettings(defaultActionName: "Ao3");
+    const initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+      macOS: initializationSettingsMacOS,
+      linux: initializationSettingsLinux,
+    );
+    final err = await flutterLocalNotificationsPlugin!.initialize(
+      initializationSettings,
+      onSelectNotification: (payload) {},
+    );
+    if (err != true) {
+      throw (StateError(
+          "Flutter local notifications plugin failed to initialize."));
+    }
+
+    // Getting the data into memory.
+    updateLibrary();
+    final _storedUpdates = Hive.box<String>("notifications").values;
+    for (final update in _storedUpdates) {
+      final notif = UpdatedBookmark.fromJson(jsonDecode(update));
+      notifications.add(notif);
+    }
+
+    return true;
+  }
+
   List<int> updateChapterTracker() {
-    var updates = <int>[];
+    final updates = <int>[];
+
     for (final bookmark in bookmarks) {
+      final oldChapterCount = chapterTracker[bookmark.workID];
+
       // If there has been no update.
       if (chapterTracker.containsKey(bookmark.workID) &&
-          chapterTracker[bookmark.workID] == bookmark.numberOfChapters) {
+          oldChapterCount == bookmark.numberOfChapters) {
         continue;
       }
 
       // If there has been an update: Update the chapterTracker and add the WorkID
       // of the updated bookmark into _newlyUpdated to be consumed.
+      final _update = UpdatedBookmark(
+        title: bookmark.title,
+        author: bookmark.author,
+        link: Ao3Client.getURLfromWorkID(bookmark.workID),
+        updateCount: bookmark.numberOfChapters - (oldChapterCount ?? 0),
+      );
+      notifications.add(
+        _update,
+      );
+
+      Hive.box<String>("notifications").add(jsonEncode(_update.toJson()));
+
       chapterTracker[bookmark.workID] = bookmark.numberOfChapters;
       updates.add(bookmark.workID);
     }
+
     return updates;
   }
 
@@ -138,52 +204,6 @@ class Ao3Model extends ChangeNotifier {
     await flutterLocalNotificationsPlugin!.show(0, 'Updates found.',
         '${notifications.length} found in bookmarks.', platformChannelSpecifics,
         payload: 'bookmarks');
-  }
-
-  /// initFuture is a variable meant to store the value of init().
-  /// Then, in FutureBuilder, the future property is set to watch initFuture, which is final.
-  /// This minimizes the rebuilds the app undergoes.
-  late final Future<bool> initFuture;
-
-  /// Initializes the app's database as well as sets up
-  /// local notifications.
-  Future<bool> init() async {
-    // Init
-    await Hive.initFlutter();
-    await Hive.openBox<String>("username");
-    await Hive.openBox<int>("bookmarks");
-
-    // Init local notifications plugin.
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const initializationSettingsAndroid =
-        AndroidInitializationSettings('app_icon');
-    const initializationSettingsIOS = IOSInitializationSettings(
-      requestSoundPermission: false,
-      requestBadgePermission: false,
-      requestAlertPermission: false,
-    );
-    const initializationSettingsMacOS = MacOSInitializationSettings(
-        requestBadgePermission: false, requestSoundPermission: false);
-    const initializationSettingsLinux =
-        LinuxInitializationSettings(defaultActionName: "Ao3");
-    const initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-      macOS: initializationSettingsMacOS,
-      linux: initializationSettingsLinux,
-    );
-    final err = await flutterLocalNotificationsPlugin!.initialize(
-      initializationSettings,
-      onSelectNotification: (payload) {},
-    );
-    if (err != true) {
-      throw (StateError(
-          "Flutter local notifications plugin failed to initialize."));
-    }
-
-    updateLibrary();
-
-    return true;
   }
 
   static void showChangeUsernameDialog(BuildContext context) {

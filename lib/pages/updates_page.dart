@@ -1,7 +1,8 @@
+import 'package:ao3notifications/ao3_model.dart';
 import 'package:ao3notifications/helpers/updated_bookmark.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-// TODO: Implement notifications page and notifications tile.
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({Key? key}) : super(key: key);
 
@@ -9,17 +10,38 @@ class NotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Updates")),
-      body: ListView.builder(
-        itemBuilder: ((context, index) {
-          return const Text(
-              "Someday, I'll conquer the land and have you slayed.");
-        }),
-        //   return const UpdatedBookmark(
-        //       title: title,
-        //       author: author,
-        //       link: link,
-        //       newChapterCount: newChapterCount);
-        // }),
+      body: const UpdatesListView(),
+    );
+  }
+}
+
+class UpdatesListView extends StatelessWidget {
+  const UpdatesListView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final updates = context.watch<Ao3Model>().notifications;
+
+    if (updates.isEmpty) return const NoUpdatesFound();
+
+    return ListView.builder(
+      itemCount: updates.length,
+      itemBuilder: (context, index) {
+        return updates[index];
+      },
+    );
+  }
+}
+
+class NoUpdatesFound extends StatelessWidget {
+  const NoUpdatesFound({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        "No updates found.",
+        style: Theme.of(context).textTheme.headline1,
       ),
     );
   }
