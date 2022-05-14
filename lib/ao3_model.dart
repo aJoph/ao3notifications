@@ -91,17 +91,20 @@ class Ao3Model extends ChangeNotifier {
       macOS: initializationSettingsMacOS,
       linux: initializationSettingsLinux,
     );
-    final err = await flutterLocalNotificationsPlugin!.initialize(
+    final initializedProperly =
+        await flutterLocalNotificationsPlugin!.initialize(
       initializationSettings,
       onSelectNotification: (payload) {},
     );
-    if (err != true) {
+
+    if (initializedProperly != true) {
       throw (StateError(
           "Flutter local notifications plugin failed to initialize."));
     }
 
     // Getting the data into memory.
     updateLibrary();
+
     final _storedUpdates = Hive.box<String>("notifications").values;
     for (final update in _storedUpdates) {
       final notif = UpdatedBookmark.fromJson(jsonDecode(update));
@@ -131,9 +134,8 @@ class Ao3Model extends ChangeNotifier {
         link: Ao3Client.getURLfromWorkID(bookmark.workID),
         updateCount: bookmark.numberOfChapters - (oldChapterCount ?? 0),
       );
-      notifications.add(
-        _update,
-      );
+
+      notifications.insert(0, _update);
 
       Hive.box<String>("notifications").add(jsonEncode(_update.toJson()));
 
@@ -142,17 +144,6 @@ class Ao3Model extends ChangeNotifier {
     }
 
     return updates;
-  }
-
-  Future<void> updateBookmarksDatabase(bookmarks) async {
-    if (Hive.isBoxOpen("bookmarks")) {
-      // So that if a user has deleted a bookmark, it is reflected here.
-      await Hive.box<int>("bookmarks").clear();
-
-      for (final _work in bookmarks) {
-        Hive.box<int>("bookmarks").put(_work.workID, _work.numberOfChapters);
-      }
-    }
   }
 
   /// Updates the bookmarks list in the Ao3Model, as well as the
@@ -183,16 +174,27 @@ class Ao3Model extends ChangeNotifier {
 
     // Seeing what has been updated.
     var _newlyUpdated = updateChapterTracker();
-    if (_newlyUpdated.isNotEmpty) consumeNotifications(_newlyUpdated);
+    if (_newlyUpdated.isNotEmpty) consumeNotifications(_newlyUpdated.length);
 
-    updateBookmarksDatabase(bookmarks);
+    _updateBookmarksDatabase(bookmarks);
 
     notifyListeners();
   }
 
+  Future<void> _updateBookmarksDatabase(bookmarks) async {
+    if (Hive.isBoxOpen("bookmarks")) {
+      // So that if a user has deleted a bookmark, it is reflected here.
+      await Hive.box<int>("bookmarks").clear();
+
+      for (final _work in bookmarks) {
+        Hive.box<int>("bookmarks").put(_work.workID, _work.numberOfChapters);
+      }
+    }
+  }
+
   /// consumeNotifications shows local notifications for the user that at least
   /// one of their bookmarks has received an updated.
-  void consumeNotifications(List<int> notifications) async {
+  void consumeNotifications(int numOfUpdates) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails('0', 'bookmarks',
             channelDescription: 'Android channel for bookamrks.',
@@ -202,7 +204,7 @@ class Ao3Model extends ChangeNotifier {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin!.show(0, 'Updates found.',
-        '${notifications.length} found in bookmarks.', platformChannelSpecifics,
+        '$numOfUpdates found in bookmarks.', platformChannelSpecifics,
         payload: 'bookmarks');
   }
 

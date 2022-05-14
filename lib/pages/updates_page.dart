@@ -1,5 +1,4 @@
 import 'package:ao3notifications/ao3_model.dart';
-import 'package:ao3notifications/helpers/updated_bookmark.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

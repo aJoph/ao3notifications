@@ -9,7 +9,8 @@ class BookmarkTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text("${work.title} by ${work.author}"),
+      title: Text(
+          "${work.title} by ${work.author} (${work.numberOfChapters} chapters)"),
       subtitle: Text(work.description),
       onTap: () => Ao3Model.ao3launchUrl(
         Ao3Client.getURLfromWorkID(work.workID),

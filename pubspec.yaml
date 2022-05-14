@@ -37,7 +37,7 @@ dependencies:
   provider: ^6.0.2
   hive: ^2.1.0
   hive_flutter: ^1.1.0
-  ao3_scraper: ^1.0.2
+  ao3_scraper: ^1.0.3
   url_launcher: ^6.1.0
   flutter_local_notifications: ^9.5.1
 
