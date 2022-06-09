@@ -1,4 +1,4 @@
-import 'package:ao3notifications/ao3_model.dart';
+import 'package:ao3notifications/models/ao3_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
