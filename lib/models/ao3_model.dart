@@ -13,7 +13,7 @@ class Ao3Model extends ChangeNotifier {
   final notifService = NotificationService();
   final persistService = PersistenceService();
 
-  /// The Ao3 bookmarks in memory. Is populated by the updateLIbrary() function.
+  /// The Ao3 bookmarks in memory. Is populated by the updateLibrary() function.
   var bookmarks = <Work>[];
   var notifications = <UpdatedBookmark>[];
 
@@ -72,8 +72,10 @@ class Ao3Model extends ChangeNotifier {
   ///
   /// It will automatically fetch the local database for bookmarks and updated the
   /// chapterTracker map with it for the sake of comparing it for new updates.
-  Future<void> updateLibrary() async {
-    if (username == null) return;
+  ///
+  /// Returns the amount of updates found.
+  Future<int> updateLibrary() async {
+    if (username == null) return 0;
 
     // Read bookmarks in local storage on first app startup.
     _fetchLocalUpdates();
@@ -89,6 +91,8 @@ class Ao3Model extends ChangeNotifier {
     persistService.storeBookmarks(bookmarks);
 
     notifyListeners();
+
+    return _newlyUpdated.length;
   }
 
   static void ao3launchUrl(String _url) async {

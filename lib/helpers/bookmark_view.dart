@@ -11,7 +11,7 @@ class BookmarkView extends StatelessWidget {
     var _bookmarks = context.watch<Ao3Model>().bookmarks;
 
     return RefreshIndicator(
-      onRefresh: () => context.read<Ao3Model>().updateLibrary(),
+      onRefresh: () => searchForUpdates(context),
       child: ListView.builder(
         itemCount: _bookmarks.length,
         itemBuilder: (context, index) {
@@ -19,5 +19,15 @@ class BookmarkView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> searchForUpdates(BuildContext context) async {
+    final numUpdates = await context.read<Ao3Model>().updateLibrary();
+    if (numUpdates == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("No updates found."),
+        duration: Duration(seconds: 2),
+      ));
+    }
   }
 }

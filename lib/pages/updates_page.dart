@@ -21,26 +21,18 @@ class UpdatesListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final updates = context.watch<Ao3Model>().notifications;
 
-    if (updates.isEmpty) return const NoUpdatesFound();
+    if (updates.isEmpty) {
+      return Center(
+        child: Text(
+          "No updates to show.",
+          style: Theme.of(context).textTheme.headline1,
+        ),
+      );
+    }
 
-    return ListView.builder(
-      itemCount: updates.length,
-      itemBuilder: (context, index) {
-        return updates[index];
-      },
-    );
-  }
-}
-
-class NoUpdatesFound extends StatelessWidget {
-  const NoUpdatesFound({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
     return Center(
-      child: Text(
-        "No updates found.",
-        style: Theme.of(context).textTheme.headline1,
+      child: Column(
+        children: updates,
       ),
     );
   }

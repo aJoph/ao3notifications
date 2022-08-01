@@ -9,8 +9,8 @@ class PersistenceService {
   late final Box<int> bookmarksBox;
   late final Box<String> notificationsBox;
 
-  /// Used by the updateLibrary() function to check if the database has already been read.
-  /// Should always be true after the first call to updateLibrary().
+  /// Used by the [updateLibrary()] function to check if the database has already been read.
+  /// Should always be true after the first call to [updateLibrary()].
   bool hasReadBookmarksInStorage = false;
   bool initialized = false;
 

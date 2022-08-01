@@ -13,11 +13,10 @@ class HomePage extends StatelessWidget {
         title: const Text("Bookmarks"),
         actions: [
           InkWell(
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => const UsernameDialog());
-            },
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const UsernameDialog(),
+            ),
             child: const Icon(Icons.person_add),
           ),
           const SizedBox(width: 16.0)

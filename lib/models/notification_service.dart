@@ -40,19 +40,24 @@ class NotificationService {
 
   void consumeNotifications(int numOfUpdates) {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails('0', 'bookmarks',
-            channelDescription: 'Android channel for bookamrks.',
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
-            ticker: 'ticker');
+        AndroidNotificationDetails(
+      '0',
+      'bookmarks',
+      channelDescription: 'Android channel for bookamrks.',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      ticker: 'ticker',
+      icon: '@mipmap/ao3logo',
+    );
 
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
+    final updateText = numOfUpdates == 1 ? "update" : "updates";
     notificationPlugin.show(
       0,
       'Updates found.',
-      '$numOfUpdates new updates found in bookmarks.',
+      '$numOfUpdates new $updateText found in bookmarks',
       platformChannelSpecifics,
       payload: 'bookmarks',
     );
