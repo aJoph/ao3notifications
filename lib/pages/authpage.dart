@@ -22,7 +22,7 @@ class _AuthPageState extends State<AuthPage> {
           child: Card(
         shape: BeveledRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: SizedBox(
-          width: MediaQuery.of(context).size.width / 2,
+          width: MediaQuery.of(context).size.width * (5 / 6),
           height: MediaQuery.of(context).size.height / 2,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
