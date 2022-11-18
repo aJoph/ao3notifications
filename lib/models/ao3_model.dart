@@ -135,8 +135,8 @@ class Ao3Model extends ChangeNotifier {
 
   /// Helper function to used by updateLibrary() to identify what has changed
   /// from one updateLibrary call to another.
-  List<int> _updateChapterTracker() {
-    final updates = <int>[];
+  List<Work> _updateChapterTracker() {
+    final updates = <Work>[];
 
     for (final bookmark in bookmarks) {
       final oldChapterCount = chapterTracker[bookmark.workID];
@@ -154,6 +154,7 @@ class Ao3Model extends ChangeNotifier {
         author: bookmark.author,
         link: Ao3Client.getURLfromWorkID(bookmark.workID),
         updateCount: bookmark.numberOfChapters - (oldChapterCount ?? 0),
+        hasBeenUpdated: true,
       );
 
       notifications.insert(0, _update);
@@ -161,7 +162,7 @@ class Ao3Model extends ChangeNotifier {
       Hive.box<String>("notifications").add(jsonEncode(_update.toJson()));
 
       chapterTracker[bookmark.workID] = bookmark.numberOfChapters;
-      updates.add(bookmark.workID);
+      updates.add(bookmark);
     }
 
     return updates;

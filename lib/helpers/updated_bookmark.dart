@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 /// Will open the associated ao3 work linked.
 class UpdatedBookmark extends StatelessWidget {
   final String title, author, link;
+  final bool hasBeenUpdated;
 
   /// updateCount is the number of new chapters found compared to before.
   /// It will be show in the UpdatedBookmark as:
@@ -17,6 +18,7 @@ class UpdatedBookmark extends StatelessWidget {
     required this.author,
     required this.link,
     required this.updateCount,
+    this.hasBeenUpdated = false,
   }) : super(key: key);
 
   @override
@@ -39,6 +41,7 @@ class UpdatedBookmark extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: <Widget>[
+                    if (hasBeenUpdated) const Text("=== UPDATED ==="),
                     Text(
                       "$title by $author",
                       style: Theme.of(context).textTheme.caption,
